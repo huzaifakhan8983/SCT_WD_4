@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>To-Do</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f1;--card:#fff;--ink:#12332e;--mute:#5f7b76;--line:#d3e0dc;--acc:#0f8b7d;--acc-t:#dcf1ed;--on:#fff;--warn:#b86e00;--bad:#c93a3a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1c1a;--card:#162927;--ink:#e6f4f1;--mute:#93b1ab;--line:#28423e;--acc:#3fc6b4;--acc-t:#1d3d39;--on:#062521;--warn:#f0b04a;--bad:#ff8080}}
+:root[data-theme="dark"]{--bg:#0e1c1a;--card:#162927;--ink:#e6f4f1;--mute:#93b1ab;--line:#28423e;--acc:#3fc6b4;--acc-t:#1d3d39;--on:#062521;--warn:#f0b04a;--bad:#ff8080}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45;padding:18px 14px}
+.app{max-width:900px;margin:0 auto;display:grid;grid-template-columns:230px 1fr;gap:18px;align-items:start}
+@media(max-width:700px){.app{grid-template-columns:1fr}}
+h1{font-size:1.6rem;margin:0 0 14px;letter-spacing:-.02em}
+button,input,select{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px}
+.lists{list-style:none;margin:0 0 12px;padding:0}
+.li{display:flex;align-items:center;gap:6px;border-radius:10px;padding:2px}
+.li.on{background:var(--acc-t)}
+.li .nm{flex:1;text-align:left;background:none;border:0;padding:8px 8px;cursor:pointer;font-weight:600;border-radius:8px}
+.li .n{color:var(--mute);font-size:.85rem;padding-right:4px}
+.ic{background:none;border:0;cursor:pointer;color:var(--mute);padding:6px 8px;border-radius:8px;font-size:.9rem}
+.ic:hover{background:var(--acc-t);color:var(--ink)}
+.row{display:flex;gap:8px}
+.in{flex:1;min-width:0;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+.btn{background:var(--acc);color:var(--on);border:0;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer}
+.btn.g{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.head h2{margin:0;font-size:1.3rem}
+.ctl{display:flex;gap:8px;flex-wrap:wrap}
+.ctl select{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:7px 10px}
+.add{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:14px}
+@media(max-width:560px){.add{grid-template-columns:1fr}}
+.tasks{list-style:none;margin:0;padding:0}
+.t{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-top:1px solid var(--line)}
+.t:first-child{border-top:0}
+.t input[type=checkbox]{width:22px;height:22px;margin-top:2px;accent-color:var(--acc);cursor:pointer;flex:none}
+.tb{flex:1;min-width:0}
+.tt{font-weight:500;word-break:break-word}
+.t.done .tt{text-decoration:line-through;color:var(--mute)}
+.due{font-size:.85rem;color:var(--mute);margin-top:2px}
+.due.soon{color:var(--warn);font-weight:600}
+.due.late{color:var(--bad);font-weight:600}
+.t.done .due{color:var(--mute);font-weight:400}
+.acts{display:flex;flex:none}
+.edit{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1}
+.edit .in{grid-column:span 2}
+.edit .half{grid-column:span 1}
+@media(max-width:560px){.edit .half{grid-column:span 2}}
+.edit .row{grid-column:span 2}
+.empty{color:var(--mute);padding:26px 6px;text-align:center}
+.foot{display:flex;justify-content:space-between;color:var(--mute);font-size:.88rem;margin-top:12px;flex-wrap:wrap;gap:8px}
+.lnk{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer;padding:0}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel">
+    <h1>To-Do</h1>
+    <ul class="lists" id="lists"></ul>
+    <form class="row" id="lf"><input class="in" id="ln" placeholder="New list name" aria-label="New list name" maxlength="40"><button class="btn" type="submit">Add</button></form>
+  </aside>
+  <main class="panel">
+    <div class="head">
+      <h2 id="lt"></h2>
+      <div class="ctl">
+        <select id="flt" aria-label="Filter"><option value="all">All</option><option value="active">Active</option><option value="done">Completed</option></select>
+        <select id="srt" aria-label="Sort"><option value="manual">Manual order</option><option value="due">By due date</option></select>
+      </div>
+    </div>
+    <form class="add" id="tf">
+      <input class="in" id="tn" placeholder="Add a task" aria-label="Task title" maxlength="200">
+      <input class="in" id="td" type="datetime-local" aria-label="Due date and time">
+      <button class="btn" type="submit">Add task</button>
+    </form>
+    <ul class="tasks" id="tasks"></ul>
+    <div class="foot"><span id="cnt"></span><button class="lnk" id="clr">Clear completed</button></div>
+  </main>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const uid=()=>Math.random().toString(36).slice(2,9);
+let S;
+try{S=JSON.parse(localStorage.getItem('todo-v1'))}catch(e){}
+if(!S||!S.lists||!S.lists.length){const a=uid();S={lists:[{id:a,name:'My tasks'},{id:uid(),name:'Work'}],tasks:[],sel:a}}
+let editing=null;
+function save(){try{localStorage.setItem('todo-v1',JSON.stringify(S))}catch(e){}}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmt(v){const d=new Date(v);return d.toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}
+function dueClass(t){if(!t.due||t.done)return'';const ms=new Date(t.due)-Date.now();return ms<0?'late':ms<864e5?'soon':''}
+
+function renderLists(){
+  $('lists').innerHTML=S.lists.map(l=>{
+    const n=S.tasks.filter(t=>t.list===l.id&&!t.done).length;
+    return `<li class="li ${l.id===S.sel?'on':''}"><button class="nm" data-a="sel" data-id="${l.id}">${esc(l.name)}</button><span class="n">${n}</span><button class="ic" data-a="ren" data-id="${l.id}" aria-label="Rename ${esc(l.name)}">✎</button><button class="ic" data-a="del" data-id="${l.id}" aria-label="Delete ${esc(l.name)}">✕</button></li>`}).join('');
+}
+function renderTasks(){
+  const list=S.lists.find(l=>l.id===S.sel);$('lt').textContent=list.name;
+  const f=$('flt').value,sm=$('srt').value;
+  let all=S.tasks.filter(t=>t.list===S.sel);
+  let items=all.filter(t=>f==='all'||(f==='done')===t.done);
+  if(sm==='due')items=items.slice().sort((a,b)=>(a.due?new Date(a.due):8.64e15)-(b.due?new Date(b.due):8.64e15));
+  $('tasks').innerHTML=items.length?items.map(t=>t.id===editing?editRow(t):row(t,sm==='manual')).join(''):`<li class="empty">${all.length?'No tasks match this filter.':'No tasks yet. Add your first one above.'}</li>`;
+  const left=all.filter(t=>!t.done).length;
+  $('cnt').textContent=`${left} active, ${all.length-left} completed`;
+  $('clr').style.visibility=all.length-left?'visible':'hidden';
+}
+function row(t,man){
+  return `<li class="t ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} data-a="tog" data-id="${t.id}" aria-label="Mark complete"><div class="tb"><div class="tt">${esc(t.title)}</div>${t.due?`<div class="due ${dueClass(t)}">${dueClass(t)==='late'?'Overdue: ':''}${fmt(t.due)}</div>`:''}</div><div class="acts">${man?`<button class="ic" data-a="up" data-id="${t.id}" aria-label="Move up">↑</button><button class="ic" data-a="dn" data-id="${t.id}" aria-label="Move down">↓</button>`:''}<button class="ic" data-a="edit" data-id="${t.id}" aria-label="Edit task">Edit</button><button class="ic" data-a="rm" data-id="${t.id}" aria-label="Delete task">✕</button></div></li>`;
+}
+function editRow(t){
+  return `<li class="t"><form class="edit" data-id="${t.id}"><input class="in" name="title" value="${esc(t.title).replace(/"/g,'&quot;')}" aria-label="Task title" required maxlength="200"><input class="in half" type="datetime-local" name="due" value="${t.due||''}" aria-label="Due date and time"><select class="in half" name="list" aria-label="List">${S.lists.map(l=>`<option value="${l.id}" ${l.id===t.list?'selected':''}>${esc(l.name)}</option>`).join('')}</select><div class="row"><button class="btn" type="submit">Save</button><button class="btn g" type="button" data-a="cancel">Cancel</button></div></form></li>`;
+}
+function render(){renderLists();renderTasks();save()}
+
+$('lf').onsubmit=e=>{e.preventDefault();const n=$('ln').value.trim();if(!n)return;const id=uid();S.lists.push({id,name:n});S.sel=id;$('ln').value='';editing=null;render()};
+$('tf').onsubmit=e=>{e.preventDefault();const n=$('tn').value.trim();if(!n){$('tn').focus();return}
+  S.tasks.push({id:uid(),list:S.sel,title:n,done:false,due:$('td').value});$('tn').value='';$('td').value='';render();$('tn').focus()};
+$('flt').onchange=$('srt').onchange=renderTasks;
+$('clr').onclick=()=>{S.tasks=S.tasks.filter(t=>!(t.list===S.sel&&t.done));render()};
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
+  if(a==='sel'){S.sel=id;editing=null;render()}
+  else if(a==='ren'){const l=S.lists.find(x=>x.id===id);const n=prompt('Rename list',l.name);if(n&&n.trim()){l.name=n.trim();render()}}
+  else if(a==='del'){if(S.lists.length===1){alert('You need at least one list.');return}
+    const l=S.lists.find(x=>x.id===id);if(!confirm(`Delete "${l.name}" and its tasks?`))return;
+    S.lists=S.lists.filter(x=>x.id!==id);S.tasks=S.tasks.filter(t=>t.list!==id);if(S.sel===id)S.sel=S.lists[0].id;render()}
+  else if(a==='rm'){S.tasks=S.tasks.filter(t=>t.id!==id);render()}
+  else if(a==='edit'){editing=id;renderTasks()}
+  else if(a==='cancel'){editing=null;renderTasks()}
+  else if(a==='up'||a==='dn')move(id,a==='up'?-1:1);
+});
+document.addEventListener('change',e=>{
+  if(e.target.dataset.a==='tog'){const t=S.tasks.find(x=>x.id===e.target.dataset.id);t.done=e.target.checked;render()}});
+document.addEventListener('submit',e=>{
+  if(!e.target.classList.contains('edit'))return;e.preventDefault();
+  const t=S.tasks.find(x=>x.id===e.target.dataset.id),f=new FormData(e.target);
+  t.title=f.get('title').trim()||t.title;t.due=f.get('due');t.list=f.get('list');editing=null;render()});
+function move(id,d){
+  const vis=S.tasks.filter(t=>t.list===S.sel&&($('flt').value==='all'||($('flt').value==='done')===t.done));
+  const k=vis.findIndex(t=>t.id===id),o=vis[k+d];if(!o)return;
+  const i=S.tasks.indexOf(vis[k]),j=S.tasks.indexOf(o);[S.tasks[i],S.tasks[j]]=[S.tasks[j],S.tasks[i]];render()}
+setInterval(()=>{if(!editing)renderTasks()},60000);
+render();
+</script>
+</body>
+</html>
